@@ -1,0 +1,20 @@
+{
+    "python-envs.defaultEnvManager": "ms-python.python:system",
+    "python.defaultInterpreterPath": "${workspaceFolder}/cdcn_gpu_env/Scripts/python.exe",
+    "python.formatting.provider": "black",
+    "terminal.integrated.env.windows": {
+        "CUDA_HOME": "C:\\Program Files\\NVIDIA\\CUDA\\v13",
+        "CUDA_PATH": "C:\\Program Files\\NVIDIA\\CUDA\\v13",
+        "CUDNN_HOME": "C:\\Program Files\\NVIDIA\\cuDNN",
+        "PATH": "C:\\Program Files\\NVIDIA\\CUDA\\v13\\bin;C:\\Program Files\\NVIDIA\\CUDA\\v13\\libnvvp;${env:PATH}",
+        "CUDA_VISIBLE_DEVICES": "0",
+        "TF_CPP_MIN_LOG_LEVEL": "1",
+        "TF_CUDA_COMPUTE_CAPABILITY": "89"
+    },
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": true,
+    "[python]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "ms-python.python"
+    }
+}

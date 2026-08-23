@@ -176,3 +176,5 @@ class CDCNpp(keras.Model):
         depth_out = self.head_out(feat)
         cls_out = self.cls_dense(self.cls_pool(feat))
         return {'depth': depth_out, 'cls': cls_out}
+
+

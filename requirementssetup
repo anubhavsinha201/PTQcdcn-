@@ -1,0 +1,24 @@
+import os
+''' GPU / CUDA path fix (must run before importing tensorflow) 
+ NVIDIA's CUDA is going to come really handy when it comes to speeding up the training process'''
+try:
+    import nvidia.cuda_nvcc
+    _nvcc_bin = os.path.join(list(nvidia.cuda_nvcc.__path__)[0], 'bin' )
+    os.environ['PATH'] = _nvcc_bin + os.pathsep + os.environ.get('PATH', '')
+except ImportError:
+    pass
+
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers
+
+'''tensorflow>=2.21.0
+keras>=3.15.0
+opencv-contrib-python
+datasets
+scikit-learn
+matplotlib
+numpy
+tqdm'''
+
+'''All these libraries/packages are essential'''

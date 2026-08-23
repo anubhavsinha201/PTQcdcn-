@@ -1,0 +1,5 @@
+Comparison,"Discordant (b, c)",Test,p-value,Significant (p<0.05)
+Original vs. FP32 (TFLite),"(0, 0)",no discordant pairs,1,no
+Original vs. Dynamic-range INT8,"(0, 0)",no discordant pairs,1,no
+Original vs. Float16,"(0, 0)",no discordant pairs,1,no
+Original vs. Full INT8,"(425, 0)",chi-square (continuity-corrected),0,YES

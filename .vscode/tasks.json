@@ -1,0 +1,75 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run Python with CUDA",
+      "type": "shell",
+      "command": "${workspaceFolder}/cdcn_gpu_env/Scripts/python.exe",
+      "args": ["${file}"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Activate conda env & Run Python",
+      "type": "shell",
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "conda activate cdcn_gpu_env; python ${file}"
+      ],
+      "group": {
+        "kind": "build"
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Run Jupyter Notebook (CDCN Project)",
+      "type": "shell",
+      "command": "${workspaceFolder}/cdcn_gpu_env/Scripts/python.exe",
+      "args": [
+        "-m",
+        "jupyter",
+        "notebook",
+        "CDCN_internship_project.ipynb"
+      ],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Check CUDA & GPU Status",
+      "type": "shell",
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-Command",
+        "nvidia-smi; Write-Host ''; Write-Host 'CUDA Environment:'; Get-ChildItem 'C:\\Program Files\\NVIDIA\\CUDA\\v13' -Name"
+      ],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    }
+  ]
+}

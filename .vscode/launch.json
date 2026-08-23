@@ -1,0 +1,41 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Current File (with CUDA)",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "env": {
+                "CUDA_HOME": "C:\\Program Files\\NVIDIA\\CUDA\\v13",
+                "CUDA_PATH": "C:\\Program Files\\NVIDIA\\CUDA\\v13",
+                "CUDNN_HOME": "C:\\Program Files\\NVIDIA\\cuDNN",
+                "CUDA_VISIBLE_DEVICES": "0",
+                "TF_CPP_MIN_LOG_LEVEL": "1"
+            }
+        },
+        {
+            "name": "Python: Module (tensorflow test)",
+            "type": "python",
+            "request": "launch",
+            "module": "tensorflow.python.platform.googletest",
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+        {
+            "name": "Python: Attach",
+            "type": "python",
+            "request": "attach",
+            "port": 5678,
+            "host": "localhost",
+            "pathMapping": [
+                {
+                    "localRoot": "${workspaceFolder}",
+                    "remoteRoot": "."
+                }
+            ]
+        }
+    ]
+}

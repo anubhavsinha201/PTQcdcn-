@@ -6,7 +6,7 @@ Anubhav Sinha — National Institute of Technology, Tiruchirappalli).
 
 The project implements the CDCN / CDCN++ face anti-spoofing architecture from
 Yu et al., *"Searching Central Difference Convolutional Networks for Face
-Anti-Spoofing"* (CVPR 2020, [arXiv:2003.04092](Research%20Papers/2003.04092v1.pdf)),
+Anti-Spoofing"* (CVPR 2020, [arXiv:2003.04092](https://arxiv.org/abs/2003.04092)),
 trains it with depth supervision on CelebA-Spoof, compresses it four different
 ways with TensorFlow Lite post-training quantization (PTQ), and measures what
 each compression method costs in presentation-attack-detection accuracy.
@@ -101,12 +101,15 @@ Two caveats worth stating up front:
 ├── real_inference_*.py             # run the quantized model on real CelebA-Spoof faces
 ├── verify_cuda.py, test_cuda_simple.py   # GPU environment checks
 │
-├── Research Papers/                # source papers (CDCN CVPR'20, FR-bypass survey)
-├── crazystuff.{docx,pdf}           # paper draft
-├── renooo.docx                     # paper draft (revision)
 ├── requirementssetup               # dependency list (see Environment)
 └── .vscode/                        # CUDA env vars, run tasks, debug configs, CUDA_SETUP.md
 ```
+
+**Not included in this repository** (see [.gitignore](.gitignore)): the paper
+drafts, which are an unpublished co-authored manuscript; the third-party source
+PDFs, which are cited by URL under [References](#references) instead; the trained
+Keras checkpoint `cdcnpp_best.weights.h5` — the `.tflite` files in
+`cdcn_quantized/` are the released model artifacts.
 
 ---
 
@@ -459,8 +462,7 @@ output ordering.
 ## References
 
 - Z. Yu et al., *Searching Central Difference Convolutional Networks for Face
-  Anti-Spoofing*, CVPR 2020. [`Research Papers/2003.04092v1.pdf`](Research%20Papers/2003.04092v1.pdf)
-- *Bypassing Facial Recognition Systems* — [`Research Papers/`](Research%20Papers/)
+  Anti-Spoofing*, CVPR 2020. [arXiv:2003.04092](https://arxiv.org/abs/2003.04092)
+- *Bypassing Facial Recognition Systems* (background reading; not redistributed here)
 - ISO/IEC 30107-3 — presentation attack detection metrics (APCER / BPCER / ACER)
 - CelebA-Spoof via Hugging Face: `nguyenkhoa/celeba-spoof-for-face-antispoofing-test`
-
