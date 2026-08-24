@@ -1,4 +1,4 @@
-class CDC(layers.Layer):
+class CDC(layers.Layer): '''This is the original model file''' '''Will make descriptions and comments soon'''
     def __init__(self, out_ch, kernel_size=3, strides=1, theta=THETA, **kwargs):
         super().__init__(**kwargs)
         self.theta = theta
