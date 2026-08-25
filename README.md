@@ -1,8 +1,23 @@
-# Post-Training Quantization of CDCN++ for Face Anti-Spoofing on the Edge
+<div align="center">
+
+# Post-Training Quantization of CDCN++<br/>for Face Anti-Spoofing on the Edge
+
+**Dr. Sishaj P. Simon · Anubhav Sinha**
+National Institute of Technology, Tiruchirappalli
+
+![TensorFlow](https://img.shields.io/badge/TensorFlow-2.21+-FF6F00?logo=tensorflow&logoColor=white)
+![Keras](https://img.shields.io/badge/Keras-3.15+-D00000?logo=keras&logoColor=white)
+![TFLite](https://img.shields.io/badge/TFLite-INT8%20%7C%20FP16-425066?logo=tensorflow&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)
+![ACER](https://img.shields.io/badge/ACER-0.05%25-029E73)
+![Model](https://img.shields.io/badge/model-2.80%20MB-029E73)
+
+</div>
+
+---
 
 Research code for the paper **"Post Training Quantization of Central Difference
-Convolution Network for Facial Anti-Spoofing on Edge"** (Dr. Sishaj P. Simon,
-Anubhav Sinha — National Institute of Technology, Tiruchirappalli).
+Convolution Network for Facial Anti-Spoofing on Edge."**
 
 The project implements the CDCN / CDCN++ face anti-spoofing architecture from
 Yu et al., *"Searching Central Difference Convolutional Networks for Face
@@ -11,13 +26,32 @@ trains it with depth supervision on CelebA-Spoof, compresses it four different
 ways with TensorFlow Lite post-training quantization (PTQ), and measures what
 each compression method costs in presentation-attack-detection accuracy.
 
-**Headline finding:** dynamic-range INT8 gives a **10.6× smaller model and 2.6×
-faster CPU inference at zero accuracy loss**, while **full-integer INT8 collapses
-the model** (ACER 0.05% → 21.45%, a 429× degradation). The collapse is not
-gradual — it is binary. The proposed mechanism is catastrophic cancellation
-inside the Central Difference Convolution: CDC subtracts two nearly-equal
-quantities, and int8 activation quantization rounds both into the same bucket,
-zeroing out exactly the micro-gradient signal the operator exists to capture.
+<div align="center">
+<img src="paper_figures/ACTUAL_inference_CLEAN.png" width="100%" alt="CDCN++ inference on real CelebA-Spoof faces: live faces produce structured depth maps and liveness scores near 1.0, spoofs produce flat depth and scores near 0."/>
+<br/>
+<em>The 2.80 MB dynamic-range INT8 model running on real CelebA-Spoof faces.<br/>
+Live faces yield structured depth and liveness ≈ 1.0; 2D spoofs yield flat depth and ≈ 0.</em>
+</div>
+
+---
+
+## The finding
+
+> **Dynamic-range INT8 gives a 10.6× smaller model and 2.6× faster CPU inference at
+> zero accuracy loss. Full-integer INT8 destroys the model** — ACER 0.05% → 21.45%,
+> a 429× degradation.
+
+The collapse is not gradual, it is binary. The proposed mechanism is **catastrophic
+cancellation** inside the Central Difference Convolution: CDC subtracts two
+nearly-equal quantities, and int8 activation quantization rounds both into the same
+bucket, zeroing out exactly the micro-gradient signal the operator exists to capture.
+
+<div align="center">
+<img src="paper_figures/Fig3_mechanism_PUBLICATION.png" width="92%" alt="Diagram: in FP32 two nearby activations 5.3 and 5.1 differ by 0.2; in INT8 both round into the same bucket and the difference becomes exactly 0."/>
+<br/>
+<em>Why full INT8 breaks CDC. Weight-only quantization leaves activations in float,
+so the subtraction stays exact — which is why three of four variants survive.</em>
+</div>
 
 ---
 
@@ -31,14 +65,36 @@ Source: [cdcn_quantized/full_comparison_metrics.md](cdcn_quantized/full_comparis
 |---|---|---|---|---|---|---|---|
 | Original (Keras, GPU) | 2.56 | 52.46 | 29.55 | 0.050 [0.000, 0.155] | 0.050 | 1.0000 | 75.5 (GPU) |
 | FP32 (TFLite) | 2.56 | 52.46 | 10.88 | 0.050 [0.000, 0.155] | 0.050 | 1.0000 | 1015.5 (CPU) |
-| **Dynamic-range INT8** | 2.56 | 52.46 | **2.80** | **0.050 [0.000, 0.155]** | 0.050 | 1.0000 | **386.1 (CPU)** |
+| **✅ Dynamic-range INT8** | 2.56 | 52.46 | **2.80** | **0.050 [0.000, 0.155]** | 0.050 | 1.0000 | **386.1 (CPU)** |
 | Float16 | 2.56 | 52.46 | 5.46 | 0.050 [0.000, 0.155] | 0.050 | 1.0000 | 1026.4 (CPU) |
-| **Full INT8** | 2.56 | 52.46 | 2.84 | **21.450 [19.667, 23.210]** | 22.039 | 0.8629 | 272.6 (CPU) |
+| **❌ Full INT8** | 2.56 | 52.46 | 2.84 | **21.450 [19.667, 23.210]** | 22.039 | 0.8629 | 272.6 (CPU) |
 
-Operating points for the full-INT8 failure case: BPCER@APCER=1% is 62.0%
-(vs. 0.1% for every other variant), APCER 12.35%, BPCER 30.55%.
+<div align="center">
+<img src="paper_figures/Fig1_quantization_collapse_PUBLICATION.png" width="100%" alt="Bar chart of ACER across variants: four sit at 0.05%, full INT8 at 21.45%. Scatter of model size against ACER isolates full INT8."/>
+</div>
 
-**McNemar's test** (original vs. each variant, same samples):
+<div align="center">
+<img src="cdcn_quantized/fig_full_comparison_bars.png" width="100%" alt="Three panels: model size, ACER with bootstrap CIs, and CPU latency across the five variants."/>
+<br/>
+<em>Size, accuracy and latency together. Dynamic-range INT8 is the only variant
+that is simultaneously small, fast and accurate.</em>
+</div>
+
+Operating points for the full-INT8 failure case: BPCER@APCER=1% is **62.0%**
+(vs. 0.1% for every other variant), APCER 12.35%, BPCER 30.55%. At a realistic
+security setting, the int8 model rejects nearly two thirds of genuine users.
+
+<div align="center">
+<img src="cdcn_quantized/fig_roc_det_combined.png" width="100%" alt="ROC and DET curves. Four variants trace an identical near-perfect curve; full INT8 is far worse."/>
+<br/>
+<em>ROC and DET. The Original, FP32, dynamic-range and Float16 curves overlap
+<strong>exactly</strong> — their predictions are byte-identical, so only the
+last-drawn colour is visible.</em>
+</div>
+
+### Statistical significance
+
+**McNemar's test**, original vs. each variant on the same samples:
 
 | Comparison | Discordant (b, c) | p-value | Significant |
 |---|---|---|---|
@@ -47,15 +103,22 @@ Operating points for the full-INT8 failure case: BPCER@APCER=1% is 62.0%
 | Original vs. Float16 | (0, 0) | 1 | no |
 | Original vs. Full INT8 | (425, 0) | ~0 | **YES** |
 
-Zero discordant pairs for the first three means those three variants make
-*identical* per-image decisions to the unquantized model — the compression is
+Zero discordant pairs for the first three means those variants make *identical*
+per-image decisions to the unquantized model — the compression is
 decision-equivalent, not merely similar. Full INT8 flips 425 decisions, always
 in the wrong direction.
 
-Two caveats worth stating up front:
+<div align="center">
+<img src="paper_figures/FigX_forest_plot_PUBLICATION.png" width="88%" alt="Forest plot of ACER with 95% bootstrap confidence intervals. Four variants cluster at 0.05% with tight intervals; full INT8 sits at 21.45%."/>
+<br/>
+<em>ACER with 95% bootstrap confidence intervals. The failure is far outside
+the noise band of the working variants.</em>
+</div>
 
-- **ROC-AUC of 1.0000 and ACER of 0.05% are suspiciously perfect.** The
-  train and validation splits both come from the single `test` split of
+### Two caveats, stated up front
+
+- **ROC-AUC of 1.0000 and ACER of 0.05% are suspiciously perfect.** Train and
+  validation splits both come from the single `test` split of
   `nguyenkhoa/celeba-spoof-for-face-antispoofing-test`, split 80/20 by
   `train_test_split(seed=42)`. There is no subject-disjoint guarantee: the same
   identity (and plausibly near-duplicate captures of the same spoof medium) can
@@ -64,9 +127,9 @@ Two caveats worth stating up front:
   cross-dataset generalisation.
 - **CPU latency numbers are host-machine measurements**, single-threaded TFLite
   on a desktop CPU, not on a Raspberry Pi or phone. They are internally
-  comparable, not an edge-device benchmark. (Note that FP32/Float16 TFLite on
-  CPU is *slower* than the Keras GPU model by ~13×; the interesting comparison
-  is TFLite-vs-TFLite.)
+  comparable, not an edge-device benchmark. Note that FP32/Float16 TFLite on CPU
+  is *slower* than the Keras GPU model by ~13×; the meaningful comparison is
+  TFLite-vs-TFLite.
 
 ---
 
@@ -95,9 +158,9 @@ Two caveats worth stating up front:
 │   ├── FIGURE_GUIDE.md             # long-form figure captions / interpretation notes
 │   └── COMPLETE_SUMMARY.txt
 │
-├── cdcn_figures/                   # earlier training-run figures (loss, ROC, confusion matrix)
+├── cdcn_figures/                   # training-run figures (loss, ROC, confusion matrix)
 │
-├── generate_*.py                   # figure generation scripts (see below)
+├── generate_*.py                   # figure generation scripts (see Figures)
 ├── real_inference_*.py             # run the quantized model on real CelebA-Spoof faces
 ├── verify_cuda.py, test_cuda_simple.py   # GPU environment checks
 │
@@ -129,6 +192,7 @@ spatial sum of the vanilla kernel — mathematically equivalent, and it reuses o
 weight tensor instead of two. `θ = 0.7` throughout (the paper's value).
 
 Two invariants are asserted in the notebook:
+
 - `θ = 0` must reduce exactly to the vanilla convolution.
 - `θ = 1` on a constant input must produce ~0 in the interior (the two terms
   cancel), with non-zero values only at the padded border.
@@ -140,16 +204,16 @@ in the paper's own Fig. 9 snippet (`self.conv.weight` should be `self.vani.weigh
 
 Both take `(B, 256, 256, 3)` RGB and emit a `(B, 32, 32, 1)` facial depth map.
 
-- **CDCN** (Table 1 baseline) — CDC stem → three CDC blocks (low/mid/high, each
-  128→196→128) with max-pooling between → concat the three levels at 32×32 →
-  3-layer CDC head.
-- **CDCN++** (Fig. 5, NAS-discovered) — two-conv stem, NAS cells per level
-  (`CDC_2_r` blocks with expansion ratios 1.6 / 1.2 / 1.4 at mid level),
-  **MAFM** instead of plain concatenation, 2-layer head. 2.56M params, 52.46 GMACs.
-  This is the model that is trained and quantized.
+| | CDCN (Table 1 baseline) | CDCN++ (Fig. 5, NAS-discovered) |
+|---|---|---|
+| Stem | CDC → 64 | CDC → 64 → 128 |
+| Levels | three blocks, 128→196→128 each | NAS cells; `CDC_2_r` with r = 1.6 / 1.2 / 1.4 at mid |
+| Fusion | plain concat at 32×32 | **MAFM** attention fusion |
+| Head | 3-layer CDC | 2-layer CDC |
+| Size | — | **2.56M params, 52.46 GMACs** |
 
-Only the *discovered* architecture is implemented — the PC-DARTS NAS search
-procedure is not reproduced.
+CDCN++ is the model that is trained and quantized. Only the *discovered*
+architecture is implemented — the PC-DARTS NAS search procedure is not reproduced.
 
 ### MAFM (Multiscale Attention Fusion Module)
 
@@ -183,23 +247,23 @@ depth maps, so the network is penalised for getting the *shape* of the depth
 surface wrong and not just its absolute values. Depth and classification losses
 are equally weighted (1.0 / 1.0).
 
-Note: the notebook's final `contrastive_depth_loss` uses **L1** on the gradient
-difference; the earlier draft cell (and the PyTorch-side notes) use **L2**. The
-L1 version is the one used in training.
+> **Note:** the notebook's final `contrastive_depth_loss` uses **L1** on the
+> gradient difference; the earlier draft cell (and the PyTorch-side notes) use
+> **L2**. The L1 version is the one used in training.
 
 ---
 
 ## Data pipeline
 
 **Dataset:** [`nguyenkhoa/celeba-spoof-for-face-antispoofing-test`](https://huggingface.co/datasets/nguyenkhoa/celeba-spoof-for-face-antispoofing-test)
-(Hugging Face). It ships a single `test` split, which is divided 80/20 into
+(Hugging Face). It ships a single `test` split, divided 80/20 into
 `ds_train_pool` / `ds_val`.
 
-⚠️ **Label convention is inverted.** In the raw HF rows, `labels == 0` means
-**live** and `labels == 1` means **spoof**. The project's internal convention is
-the opposite (`1 = live`). All conversion goes through the single `get_label()`
-helper — check it before writing any new evaluation code, because getting this
-backwards silently inverts every metric.
+> ⚠️ **Label convention is inverted.** In the raw HF rows, `labels == 0` means
+> **live** and `labels == 1` means **spoof**. The project's internal convention is
+> the opposite (`1 = live`). All conversion goes through the single `get_label()`
+> helper — check it before writing any new evaluation code, because getting this
+> backwards silently inverts every metric.
 
 **Class balancing:** CelebA-Spoof is ~70% spoof, so training draws up to
 10,000 live + 10,000 spoof (auto-capped by whichever class runs out first, i.e.
@@ -251,8 +315,16 @@ otherwise a flipped face would be regressed against a now-wrong-sided depth map.
 | Batch size | 8 | 16 OOM'd — this GPU exposes ~5 GB to TF and a bs=16 backward pass tried to allocate 6+ GB |
 | Epochs | 40 (upper bound) | EarlyStopping usually stops sooner |
 | Callbacks | EarlyStopping(val_loss, patience 6, restore best), ReduceLROnPlateau(×0.5, patience 4), ModelCheckpoint | |
-| Checkpoint | `cdcnpp_best.weights.h5` | **not committed to this folder** — see Known gaps |
+| Checkpoint | `cdcnpp_best.weights.h5` | not committed — see [Known gaps](#known-gaps-and-caveats) |
 | BatchNorm | momentum 0.9, ε 1e-5, He-normal init | |
+
+<div align="center">
+<img src="cdcn_figures/fig_loss_components.png" width="100%" alt="Two loss curves over 32 epochs: depth regression loss falling from 0.10 to 0.04, and auxiliary classification BCE falling from 0.64 to near 0."/>
+<br/>
+<em>Both objectives converge over 32 epochs. The auxiliary BCE drops to near zero
+within ~10 epochs; the depth loss keeps improving slowly, and validation tracks
+train without divergence.</em>
+</div>
 
 ---
 
@@ -260,13 +332,13 @@ otherwise a flipped face would be regressed against a now-wrong-sided depth map.
 
 Metrics follow **ISO/IEC 30107-3** presentation-attack-detection terminology:
 
-- **APCER** — fraction of *spoof* samples wrongly accepted as live (security risk).
-- **BPCER** — fraction of *live* samples wrongly rejected (usability cost).
-- **ACER** — the mean of the two.
-- **EER** — equal error rate.
-- **BPCER@APCER=k%** — usability cost at a fixed security operating point; the
-  metric that actually matters for deployment, and the one where full INT8 looks
-  worst (62% of genuine users rejected at APCER=1%).
+| Metric | Meaning |
+|---|---|
+| **APCER** | fraction of *spoof* samples wrongly accepted as live — the security risk |
+| **BPCER** | fraction of *live* samples wrongly rejected — the usability cost |
+| **ACER** | the mean of the two |
+| **EER** | equal error rate |
+| **BPCER@APCER=k%** | usability cost at a fixed security operating point — the metric that actually matters for deployment, and where full INT8 looks worst |
 
 The decision threshold is **not** hardcoded: each evaluation run sweeps the ROC
 curve and picks the point minimising ACER. 95% confidence intervals on ACER and
@@ -289,33 +361,23 @@ operates on the frozen inference graph regardless of how the model was built.
 
 Four variants, all converted from the same SavedModel:
 
-| Variant | What is quantized | Calibration |
-|---|---|---|
-| FP32 | nothing (fair CPU baseline) | — |
-| Dynamic-range | int8 weights, float activations | none needed |
-| Float16 | fp16 weights | none needed |
-| Full INT8 | int8 weights **and** activations | 200 images from the **training pool only** |
+| Variant | What is quantized | Calibration | Verdict |
+|---|---|---|---|
+| FP32 | nothing (fair CPU baseline) | — | ✅ baseline |
+| Dynamic-range | int8 weights, float activations | none needed | ✅ **recommended** |
+| Float16 | fp16 weights | none needed | ✅ works |
+| Full INT8 | int8 weights **and** activations | 200 images from the **training pool only** | ❌ collapses |
 
 The calibration set is drawn strictly from `ds_train_pool`, never from the
 held-out `ds_val` used for reporting.
 
-**Export gotcha worth remembering:** exporting via plain `tf.saved_model.save()`
-on this subclassed model left a BatchNorm variable as an unresolved
-`READ_VARIABLE` op, which made full-int8 conversion fail outright. Keras 3's
-`Model.export()` — purpose-built for a fully-frozen inference-only SavedModel —
-resolves it. That is what the notebook uses.
+> **Export gotcha worth remembering:** exporting via plain `tf.saved_model.save()`
+> on this subclassed model left a BatchNorm variable as an unresolved
+> `READ_VARIABLE` op, which made full-int8 conversion fail outright. Keras 3's
+> `Model.export()` — purpose-built for a fully-frozen inference-only SavedModel —
+> resolves it. That is what the notebook uses.
 
-### Why full INT8 fails
-
-CDC computes `vanilla_conv(x) − θ·centre_term(x)`, i.e. a difference of two
-quantities of similar magnitude. Its output is the small residual. Under
-int8 *activation* quantization, both operands are rounded onto the same coarse
-grid; when they land in the same bucket, the residual quantizes to exactly zero
-and the operator degenerates. Weight-only quantization (dynamic-range, float16)
-leaves activations in float, so the subtraction stays exact — which is precisely
-why those three variants are decision-identical to FP32 and full INT8 is not.
-
-The practical takeaway for edge deployment: **use dynamic-range INT8.** It is the
+**The practical takeaway for edge deployment: use dynamic-range INT8.** It is the
 smallest variant that preserves accuracy exactly (2.80 MB, 10.6× smaller than the
 Keras checkpoint), and the fastest of the accuracy-preserving options.
 
@@ -326,30 +388,43 @@ Keras checkpoint), and the fastest of the accuracy-preserving options.
 [paper_figures/INDEX.md](paper_figures/INDEX.md) and
 [paper_figures/FIGURE_GUIDE.md](paper_figures/FIGURE_GUIDE.md) document each
 figure's purpose, key finding, and intended paper section. Every figure exists as
-both PNG (presentations) and PDF (submission).
+both PNG (presentations) and PDF (submission). Colour palette is Okabe-Ito /
+colorblind-safe throughout.
 
-| Figure | Generated by | Shows |
+### Measured on real data
+
+| Figure | File | Generated by |
 |---|---|---|
-| Fig 0 — Dataset examples | `generate_dataset_samples.py` | Live vs. spoof CelebA-Spoof samples |
-| Fig 0 — Real depth maps | `generate_depth_maps.py` | Real faces paired with predicted depth |
-| Fig 1 — Quantization collapse | `generate_paper_figures.py`, `generate_publication_figures.py` | ACER bar chart + size/accuracy scatter (**main result**) |
-| Fig 2 — Depth visualization | `generate_paper_figures.py` | Input → GT depth → predicted depth, live and spoof |
-| Fig 3 — Catastrophic cancellation | `generate_paper_figures.py` | Mechanism diagram: FP32 preserves the 0.2 difference, INT8 collapses it to 0 |
-| Fig 5 — Depth statistics | `generate_depth_statistics.py` | Mean/variance distributions (live ≈0.55, spoof ≈0.08), separability scatter |
-| Fig X — Forest plot | `generate_forest_plot.py` | ACER point estimates with 95% bootstrap CI |
-| ACTUAL_inference_* | `real_inference_{clean,large,quantized}.py` | Quantized model run on real CelebA-Spoof faces |
+| Inference on real faces | [`ACTUAL_inference_CLEAN.png`](paper_figures/ACTUAL_inference_CLEAN.png) | `real_inference_clean.py` |
+| Quantization collapse | [`Fig1_quantization_collapse_PUBLICATION.png`](paper_figures/Fig1_quantization_collapse_PUBLICATION.png) | `generate_publication_figures.py` |
+| Size / accuracy / latency | [`fig_full_comparison_bars.png`](cdcn_quantized/fig_full_comparison_bars.png) | notebook |
+| ROC + DET curves | [`fig_roc_det_combined.png`](cdcn_quantized/fig_roc_det_combined.png) | notebook |
+| ACER forest plot | [`FigX_forest_plot_PUBLICATION.png`](paper_figures/FigX_forest_plot_PUBLICATION.png) | `generate_forest_plot.py` |
+| Training curves | [`fig_loss_components.png`](cdcn_figures/fig_loss_components.png) | notebook |
+| Confusion matrix, ROC | [`cdcn_figures/`](cdcn_figures/) | notebook |
 
-Colour palette is Okabe-Ito / colorblind-safe throughout
-(live `#029E73` green, spoof `#CA0020` red, failure cases red).
+### Conceptual diagram
 
-⚠️ **Some figure scripts use synthetic stand-in data.**
-`generate_dataset_samples_cached.py`, `generate_depth_maps_simplified.py`, and
-`generate_depth_statistics.py` synthesise representative images/statistics when
-the dataset or landmark stack is unavailable; `real_inference_fast.py` falls back
-to synthetic faces. Use the non-`_simplified`/`_cached` variants
-(`generate_dataset_samples.py`, `generate_depth_maps.py`,
-`real_inference_quantized.py`, `real_inference_clean.py`, `real_inference_large.py`)
-for anything that goes into the paper as real data.
+| Figure | File | Note |
+|---|---|---|
+| Catastrophic cancellation | [`Fig3_mechanism_PUBLICATION.png`](paper_figures/Fig3_mechanism_PUBLICATION.png) | An explanatory schematic of the INT8 failure mode, not a measurement. |
+
+### ⚠️ Illustrative only — synthetic data
+
+These were generated with simulated inputs and **must not be presented as
+experimental results**:
+
+| Figure | What is synthetic |
+|---|---|
+| [`fig2_depth_visualization.png`](paper_figures/fig2_depth_visualization.png) | Entirely synthetic. Inputs are random noise, and the "predicted" depth is literally `ground_truth + 0.02 × randn`. |
+| [`fig_depth_statistics.png`](paper_figures/fig_depth_statistics.png) | Distributions are simulated from assumed parameters, not measured. |
+| [`fig0_real_depth_maps.png`](paper_figures/fig0_real_depth_maps.png) | Faces are real CelebA-Spoof; the paired depth maps are synthetic Gaussians. Regenerate with `generate_depth_maps.py` before use. |
+
+Likewise, `generate_dataset_samples_cached.py`, `generate_depth_maps_simplified.py`
+and `real_inference_fast.py` fall back to synthetic imagery when the dataset or
+landmark stack is unavailable. For anything going into the paper, use
+`generate_dataset_samples.py`, `generate_depth_maps.py`, and
+`real_inference_{quantized,clean,large}.py`.
 
 ---
 
@@ -408,7 +483,7 @@ names defined earlier (`get_label`, `geometry_depth_map`, `_HAAR_PATH`,
 `ds_train_pool`, `ds_val`, `model`, `history`).
 
 1. **Verify the GPU stack** — `python verify_cuda.py`.
-2. **Open `CDCN_internship_project.ipynb`** and run cells top to bottom:
+2. **Open [`CDCN_internship_project.ipynb`](CDCN_internship_project.ipynb)** and run cells top to bottom:
    - cells 1–2: CUDA `PATH` fix, then TF import (do not reorder);
    - cells 3–12: CDC operator + invariant tests + CDCN / CDCN++ definitions;
    - cells 13–17: losses, dataset load, geometry depth targets, generator, training;
@@ -418,34 +493,30 @@ names defined earlier (`get_label`, `geometry_depth_map`, `_HAAR_PATH`,
    `cdcn_quantized/full_comparison_results.json`, so run the quantization cells
    first) and the `real_inference_*.py` scripts for qualitative panels.
 
-To run inference only, skip straight to
-`cdcn_quantized/cdcnpp_dynamic_range.tflite` — `real_inference_clean.py` shows a
-complete load-interpret-score loop, including `find_output_index()`, which
-distinguishes the `cls` output (1 element) from the `depth` output (32×32) by
-element count rather than by name or index, since TFLite does not preserve
-output ordering.
+### Inference only
+
+Skip straight to [`cdcn_quantized/cdcnpp_dynamic_range.tflite`](cdcn_quantized/cdcnpp_dynamic_range.tflite).
+[real_inference_clean.py](real_inference_clean.py) shows a complete
+load-interpret-score loop, including `find_output_index()`, which distinguishes
+the `cls` output (1 element) from the `depth` output (32×32) **by element count
+rather than by name or index**, since TFLite does not preserve output ordering.
 
 ---
 
 ## Known gaps and caveats
 
-- **`cdcnpp_best.weights.h5` is not in this folder.** The quantization cells load
-  it, so they cannot be re-run from scratch here without retraining. The `.tflite`
+- **`cdcnpp_best.weights.h5` is not in this repository.** The quantization cells
+  load it, so they cannot be re-run from scratch without retraining. The `.tflite`
   files in `cdcn_quantized/` are the surviving trained artifacts.
 - **`models.py` is empty**; [model.py](model.py) holds the Keras definitions but is
   a fragment lifted from the notebook — it has no imports and no `THETA` /
   `BN_MOMENTUM` / `CONV_INIT` definitions, so it will not import standalone.
   [cdcn_pytorch.py](cdcn_pytorch.py) *is* self-contained and runnable
   (`python cdcn_pytorch.py` runs a shape + parameter-count smoke test).
-- **`cdcn_gpu_env/` is a broken/empty virtualenv** — it was created under WSL
-  (`/usr/bin/python3.14`, POSIX `bin/` layout, no packages installed), while
-  `.vscode/settings.json` and `tasks.json` point at
-  `cdcn_gpu_env/Scripts/python.exe` (Windows layout), which does not exist. Use a
-  system or conda interpreter, or recreate the venv on Windows.
 - **`.vscode/settings.json` sets `TF_CUDA_COMPUTE_CAPABILITY=89`** (Ada), which
   does not match the RTX 5070 (12.0a) described in the notebook's CUDA comment.
-- **`'''import dependancies '''.py`** is a scratch file whose entire contents are
-  notes inside a docstring; the filename itself is a stray artifact.
+  It also points the interpreter at `cdcn_gpu_env/Scripts/python.exe`, a
+  virtualenv that is not part of this repository.
 - **Two notebooks exist.** `CDCN_internship_project.ipynb` is the real one;
   `cdcn_internship.ipynb` contains only the CUDA path-fix cell and a stored
   `SyntaxError`.
@@ -454,7 +525,7 @@ output ordering.
   `full_comparison_metrics.md` (1015.5 ms) are separate measurement passes on a
   shared host; treat them as run-to-run variance, and prefer
   `full_comparison_metrics.md`, which is the more complete table.
-- Absolute Windows paths are hardcoded in every `generate_*.py` and
+- **Absolute Windows paths are hardcoded** in every `generate_*.py` and
   `real_inference_*.py` script; they need editing to run elsewhere.
 
 ---
@@ -465,4 +536,5 @@ output ordering.
   Anti-Spoofing*, CVPR 2020. [arXiv:2003.04092](https://arxiv.org/abs/2003.04092)
 - *Bypassing Facial Recognition Systems* (background reading; not redistributed here)
 - ISO/IEC 30107-3 — presentation attack detection metrics (APCER / BPCER / ACER)
-- CelebA-Spoof via Hugging Face: `nguyenkhoa/celeba-spoof-for-face-antispoofing-test`
+- CelebA-Spoof via Hugging Face:
+  [`nguyenkhoa/celeba-spoof-for-face-antispoofing-test`](https://huggingface.co/datasets/nguyenkhoa/celeba-spoof-for-face-antispoofing-test)
