@@ -2,7 +2,7 @@
 
 # Post-Training Quantization of CDCN++<br/>for Face Anti-Spoofing on the Edge
 
-**Dr. Sishaj P. Simon · Anubhav Sinha**
+**Anubhav Sinha · Dr. Sishaj p Simon**
 National Institute of Technology, Tiruchirappalli
 
 ![TensorFlow](https://img.shields.io/badge/TensorFlow-2.21+-FF6F00?logo=tensorflow&logoColor=white)
